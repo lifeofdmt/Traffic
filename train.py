@@ -1,5 +1,5 @@
 from torchvision import datasets, transforms, models
-from torch import nn, optim, utils, cuda, no_grad, exp, FloatTensor, mean
+from torch import nn, optim, utils, cuda, no_grad, exp, FloatTensor, mean, save
 
 # Define dataset transforms
 train_transform = transforms.Compose([transforms.Resize(256), transforms.RandomResizedCrop(224), transforms.RandomRotation(30),
@@ -70,12 +70,12 @@ for i in range(epochs):
 
     # Add up training_loss
     training_loss += loss.item()
-  
+
   # Check models accuracy on Validation Set
   validation_loss = 0
   accuracy = 0
   model.eval()
-  
+
   with no_grad():
     for images, labels in dataloaders[1]:
       # Move images and labels to GPU
@@ -90,12 +90,12 @@ for i in range(epochs):
       validation_loss += loss.item()
 
       # Find predicted_labels
-      top_ps, top_classes = prediction.topk(k=1, dim=1) 
+      top_ps, top_classes = prediction.topk(k=1, dim=1)
 
       # Compute accuracy
       equality = top_classes.view(*labels.shape) == labels
       accuracy += mean(equality.type(FloatTensor)).item()
-    
+
   print(f"Epoch: {i+1}")
   print(f"Training Loss: {training_loss / len(dataloaders[0]):.2f}")
   print(f"Validation Loss: {validation_loss / len(dataloaders[1]):.2f}")
@@ -103,3 +103,13 @@ for i in range(epochs):
   print()
   model.train()
 
+
+# Save model
+checkpoint = {'input_units': input_units, 'output_units': output_units,
+              'hidden_units': [1024, 512, 256], 'classifier_state': model.classifier.state_dict(),
+              'epochs': epochs, 'optimizer_state': optimizer.state_dict(),
+              'dropout': dropout_rate} # Save model information for prediction and for further trainiing
+
+
+# Save model
+save(checkpoint, 'checkpoint.pth')
